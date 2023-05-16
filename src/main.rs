@@ -1,4 +1,5 @@
 use clap::{Parser, Subcommand};
+use std::io::{stdin, stdout, Write};
 use std::time::Instant;
 use std::{fs::create_dir_all, path::PathBuf};
 
@@ -16,7 +17,7 @@ struct Cli {
 enum Commands {
     Ship {},
     Link {},
-    Init { name: String },
+    Init { name: Option<String> },
 }
 
 fn main() {
@@ -33,14 +34,26 @@ fn main() {
             println!("Linked to Nothing in {:.2?}", before.elapsed());
         }
         Some(Commands::Init { name }) => {
+            let target = name.to_owned().unwrap_or_else(|| read_line("Project Name"));
             let before = Instant::now();
 
             println!("Creating Project...");
-            create_dir_all(name).unwrap_or_else(|e| panic!("Error creating dir: {}", e));
+            create_dir_all(&target).unwrap_or_else(|e| panic!("Error creating dir: {}", e));
 
-            println!("Created nothing in {} Successfully", name);
+            println!("Created nothing in {} Successfully", &target);
             println!("Took {:.2?}", before.elapsed());
         }
         None => {}
     }
+}
+
+fn read_line(message: &str) -> String {
+    let mut target = String::new();
+    print!("{}: ", message);
+    stdout().flush().expect("Failed to read input");
+    stdin()
+        .read_line(&mut target)
+        .expect("Failed to read input");
+
+    return target.trim().to_string();
 }
